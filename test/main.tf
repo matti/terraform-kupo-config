@@ -1,25 +1,26 @@
 module "kupo" {
   source = ".."
 
-  hosts = [
-    {
-      role            = "master"
-      address         = "35.190.177.65"
-      user            = "ubuntu"
-      private_address = "10.142.0.3"
-    },
-    {
-      role            = "worker"
-      address         = "35.229.87.147"
-      user            = "ubuntu"
-      private_address = "10.142.0.4"
+  # workaround terraform heterogenous map issue
+  master_addresses         = ["1.0.0.1"]
+  master_private_addresses = ["10.0.0.1"]
 
-      labels = {
-        disk    = "ssd"
-        ingress = "nginx"
-      }
-    },
-  ]
+  master_fields = {
+    role = "master"
+    user = "user"
+  }
+
+  worker_addresses         = ["2.0.0.0", "2.0.0.1"]
+  worker_private_addresses = ["20.0.0.1", "20.0.0.2"]
+
+  worker_fields = {
+    role = "worker"
+    user = "user"
+
+    labels = {
+      ingress = "nginx"
+    }
+  }
 
   network = {
     service_cidr     = "10.96.0.0/12"
@@ -29,31 +30,7 @@ module "kupo" {
 
   addons = {
     ingress-nginx = {
-      enabled = true
-
-      node_selector = {
-        ingress = "nginx"
-      }
-
-      configmap = {
-        # see all supported options: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/configmap.md
-        load-balance = "least_conn"
-      }
-    }
-
-    cert-manager = {
-      enabled = true
-
-      issuer = {
-        name   = "letsencrypt-staging"
-        server = "https://acme-staging.api.letsencrypt.org/directory"
-        email  = "me@domain.com"
-      }
-    }
-
-    host-upgrades = {
-      enabled  = true
-      interval = "7d"
+      enabled = false
     }
 
     kured = {
